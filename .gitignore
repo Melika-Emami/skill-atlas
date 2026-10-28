@@ -1,5 +1,6 @@
-# Local assignment PDFs
-examples/*.pdf
+# Keep the examples folder, but exclude its contents
+examples/*
+!examples/.gitkeep
 
 # Python generated files and virtual environments
 __pycache__/
