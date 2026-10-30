@@ -2,6 +2,10 @@
 examples/*
 !examples/.gitkeep
 
+# Keep the outputs folder, but exclude its contents
+outputs/*
+!outputs/.gitkeep
+
 # Python generated files and virtual environments
 __pycache__/
 *.pyc

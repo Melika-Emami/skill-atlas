@@ -1,6 +1,8 @@
 # importing required classes
 from pypdf import PdfReader
 import re
+import json
+from pathlib import Path
 
 skill_keywords = {
     "FIFO buffering": ["fifo", "first-in-first-out"],
@@ -8,6 +10,8 @@ skill_keywords = {
     "Data aggregation": ["aggregation", "aggregate"],
     "Symbolic Aggregate Approximation": ["symbolic aggregate approximation", "sax"],
 }
+
+context_chars = 150
 
 
 def clean_text(text: str) -> str:
@@ -49,15 +53,19 @@ def find_skill_keywords(
             words = phrase.split()
             pattern = r"\b" + r"\s+".join(re.escape(word) for word in words) + r"\b"
 
-            match = re.search(pattern, text, flags=re.IGNORECASE)
+            for match in re.finditer(pattern, text, flags=re.IGNORECASE):
+                excerpt_start = max(0, match.start() - context_chars)
+                excerpt_end = min(len(text), match.end() + context_chars)
 
-            if match:
                 each_skill["matched_phrases"].append(
                     {
                         "keyword": phrase,
                         "matched_text": match.group(),
                         "start": match.start(),
                         "end": match.end(),
+                        "excerpt": text[excerpt_start:excerpt_end],
+                        "excerpt_start": excerpt_start,
+                        "excerpt_end": excerpt_end,
                     }
                 )
 
@@ -86,7 +94,20 @@ def extract_skills_from_pdf(
 
 
 if __name__ == "__main__":
-    results = extract_skills_from_pdf("assignment", skill_keywords)
+    file_name = "assignment"
+    results = extract_skills_from_pdf(file_name, skill_keywords)
 
-    for result in results:
-        print(result)
+    final_results = {
+        "source_file": f"{file_name}.pdf",
+        "skills": results,
+    }
+
+    output_dir = Path("outputs")
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    with (output_dir / f"{file_name}.json").open("w", encoding="utf-8") as fp:
+        json.dump(final_results, fp, ensure_ascii=False, indent=4)
+
+    # print(results[0])
+    # for result in results:
+    #     print(result)
